@@ -201,7 +201,7 @@ class Diffusion(nn.Module):
         middle_sample = self.down_3(down_sample)
         middle_sample = self.avg_3(self.up_0(middle_sample))
 
-        reverse_feature = ReverseLayerF.apply(middle_sample, 0.01)
+        reverse_feature = ReverseLayerF.apply(middle_sample, 0.001)
         domain_output = self.domain_classifier(reverse_feature)
 
         # Up Sample
