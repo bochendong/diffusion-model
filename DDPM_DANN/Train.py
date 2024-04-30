@@ -73,7 +73,7 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
             optimizer.step()
 
 
-        print("src", total_src_loss, 'tgt', total_tgt_loss, 'diff', total_diff_loss)
+        print("src", total_src_loss.item(), 'tgt', total_tgt_loss.item(), 'diff', total_diff_loss.item())
         print(f"Epoch {epoch+1}: Loss = {loss.item()}")
         noise = torch.randn([10, 3, 32, 32], device=device)
         fakes_classes = torch.arange(10, device=device)
@@ -81,4 +81,3 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
         fakes = (fakes + 1) / 2
         fakes = torch.clamp(fakes, min=0, max = 1)
         save_image(fakes.data, './output/%03d_train.png' % epoch)
-

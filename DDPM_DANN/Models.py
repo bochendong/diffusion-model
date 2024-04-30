@@ -177,7 +177,7 @@ class Diffusion(nn.Module):
             ResConvBlock(c, c, 3, is_last=True),
         )
 
-    def forward(self, input, t, cond, type = "Target"):
+    def forward(self, input, t, cond, type = "Source"):
         timestep_embed = expand_to_planes(self.timestep_embed(t[:, None]), input.shape)
         class_embed = expand_to_planes(self.class_embed(cond + 1), input.shape)
 
