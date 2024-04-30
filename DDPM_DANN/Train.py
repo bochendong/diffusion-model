@@ -62,9 +62,13 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
 
             # TODO: It should be a class recon classifier here
 
-            domain_loss = loss_s_domain + loss_t_domain
-            domain_loss.backward(retain_graph=True)
-            diffused_loss.backward()
+            #domain_loss = loss_s_domain + loss_t_domain
+            #domain_loss.backward(retain_graph=True)
+            #diffused_loss.backward()
+
+            loss = loss_s_domain + loss_t_domain + diffused_loss
+            loss.backward()
+            
             optimizer.step()
 
             total_src_loss += loss_s_domain
