@@ -98,7 +98,7 @@ class DomainClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(256 * 8 * 8, 1024),
+            nn.Linear(256 * 16 * 16, 1024),
             nn.BatchNorm1d(1024),
             nn.ReLU(True),
             nn.Linear(1024, 256),
@@ -109,7 +109,7 @@ class DomainClassifier(nn.Module):
         )
 
     def forward(self, input):
-        input = input.view(-1, 256 * 8 * 8)
+        input = input.view(-1, 256 * 16 * 16)
         return self.net(input)
     
 def expand_to_planes(input, shape):

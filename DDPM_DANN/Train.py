@@ -33,11 +33,10 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
     src_domain_label = torch.zeros(batch_size).long().to(device)
     tgt_domain_label = torch.ones(batch_size).long().to(device)
 
-    total_src_loss = 0
-    total_tgt_loss = 0
-    total_diff_loss = 0
-
     for epoch in range(epoches):
+        total_src_loss = 0
+        total_tgt_loss = 0
+        total_diff_loss = 0
         target_iter = iter(target_dl)
         model.train()
         for src_images, src_labels in source_dl:
@@ -63,18 +62,17 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
 
             # TODO: It should be a class recon classifier here
 
-            loss = (diffused_loss + loss_s_domain +  loss_t_domain)
+            domain_loss = loss_s_domain + loss_t_domain
+            domain_loss.backward(retain_graph=True)
+            diffused_loss.backward()
+            optimizer.step()
 
             total_src_loss += loss_s_domain
             total_tgt_loss += loss_t_domain
             total_diff_loss = diffused_loss
 
-            loss.backward()
-            optimizer.step()
-
-
+        print(f"Epoch {epoch+1}:")
         print("src", total_src_loss.item(), 'tgt', total_tgt_loss.item(), 'diff', total_diff_loss.item())
-        print(f"Epoch {epoch+1}: Loss = {loss.item()}")
         noise = torch.randn([10, 3, 32, 32], device=device)
         fakes_classes = torch.arange(10, device=device)
         fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
