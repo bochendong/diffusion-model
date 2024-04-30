@@ -67,8 +67,14 @@ class FourierFeatures(nn.Module):
 class FeatureEmbedding(nn.Module):
     def __init__(self):
         super(FeatureEmbedding, self).__init__()
-        self.fc1 = nn.Linear(1000, 2048)
-        self.fc2 = nn.Linear(2048, 3072)
+
+        self.fe = nn.Sequential(
+            nn.Linear(1000, 2048),
+            nn.ReLU(True),
+            nn.Linear(2048, 4096),
+            nn.ReLU(True),
+            nn.Linear(4096, 12288),
+        )
 
         self.pretrained_model = resnet50(pretrained=True)
         self.pretrained_model = self.pretrained_model.to(device)
@@ -76,9 +82,8 @@ class FeatureEmbedding(nn.Module):
     def forward(self, x):
         with torch.no_grad():
             x = self.pretrained_model(x)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = x.view(-1, 3, 32, 32)
+        x = self.fe(x)
+        x = x.view(-1, 3, 64, 64)
         return x
     
 class ReverseLayerF(Function):
