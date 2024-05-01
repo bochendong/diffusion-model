@@ -17,7 +17,7 @@ def get_alphas_sigmas(t):
     """
     return torch.cos(t * math.pi / 2), torch.sin(t * math.pi / 2)
 
-batch_size = 100
+batch_size = 256
 epoches = 10
 
 # Actually train the model
@@ -238,6 +238,7 @@ def sample(model, x, steps, eta, classes, guidance_scale=1.):
     return pred
 
 def train(epoch):
+    loss_sum = 0
     for i, (reals, classes) in enumerate(train_dl):
         opt.zero_grad()
         reals = reals.to(device)
@@ -271,13 +272,17 @@ def train(epoch):
         loss = F.mse_loss(v, targets)
 
         # Do the optimizer step and EMA update
-        scaler.scale(loss).backward()
-        scaler.step(opt)
+        # scaler.scale(loss).backward()
+        # scaler.step(opt)
+        loss.backward()
+        opt.step()
 
         # ema_update(model, model_ema, 0.95 if epoch < 20 else ema_decay)
-        scaler.update()
+        # scaler.update()
 
-    print(f"Epoch {epoch+1}:")
+        loss_sum += loss
+
+    print(f"Epoch {epoch+1}: loss {loss_sum.item()}")
     noise = torch.randn([10, 3, 32, 32], device=device)
     fakes_classes = torch.arange(10, device=device)
     fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
