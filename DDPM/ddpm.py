@@ -8,7 +8,6 @@ from torch.nn import functional as F
 from torch.utils import data
 from torchvision import datasets, transforms, utils
 from torchvision.transforms import functional as TF
-from tqdm.notebook import tqdm, trange
 from torchvision.utils import save_image
 
 def get_alphas_sigmas(t):
@@ -204,7 +203,7 @@ def sample(model, x, steps, eta, classes, guidance_scale=1.):
     alphas, sigmas = get_alphas_sigmas(t)
 
     # The sampling loop
-    for i in trange(steps):
+    for i in range(steps):
 
         # Get the model output (v, the predicted velocity)
         with torch.cuda.amp.autocast():
@@ -239,7 +238,7 @@ def sample(model, x, steps, eta, classes, guidance_scale=1.):
     return pred
 
 def train(epoch):
-    for i, (reals, classes) in enumerate(tqdm(train_dl)):
+    for i, (reals, classes) in enumerate(train_dl):
         opt.zero_grad()
         reals = reals.to(device)
         classes = classes.to(device)
