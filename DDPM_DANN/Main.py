@@ -18,13 +18,13 @@ for f in files:
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-batch_size = 128
+batch_size = 256
 epoches = 10
 
 source_dl, target_dl, test_dl = load_data_set(batch_size = batch_size)
 criterion = nn.NLLLoss()
 model = Diffusion().to(device)
-optimizer = optim.Adam(model.parameters(), lr=2e-5)
+optimizer = optim.Adam(model.parameters(), lr=2e-4)
 
 train_model(model, optimizer, source_dl, target_dl, criterion = criterion, 
             epoches=epoches, device=device, batch_size = batch_size)

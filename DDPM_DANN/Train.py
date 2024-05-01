@@ -72,7 +72,7 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
 
             total_src_loss += loss_s_domain
             total_tgt_loss += loss_t_domain
-            total_diff_loss = diffused_loss
+            total_diff_loss += diffused_loss
 
         print(f"Epoch {epoch+1}:")
         print("src", total_src_loss.item(), 'tgt', total_tgt_loss.item(), 'diff', total_diff_loss.item())
