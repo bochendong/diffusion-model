@@ -8,6 +8,7 @@ from Models import get_alphas_sigmas, sample
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 rng = torch.quasirandom.SobolEngine(1, scramble=True)
+torch.cuda.empty_cache()
 
 steps = 500
 eta = 1.
