@@ -47,7 +47,10 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
 
             optimizer.zero_grad()
 
-            output, domain_output = model(noised_src, t, src_labels, type = "Source")
+            to_drop = torch.rand(src_labels.shape, device=src_labels.device).le(0.2)
+            classes_drop = torch.where(to_drop, -torch.ones_like(src_labels), src_labels)
+
+            output, domain_output = model(noised_src, t, classes_drop, type = "Source")
             diffused_loss = F.mse_loss(output, src_recon_targets)
 
             loss_s_domain = criterion(domain_output, src_domain_label)
@@ -61,10 +64,6 @@ def train_model(model, optimizer, source_dl, target_dl, criterion, epoches, devi
             loss_t_domain = criterion(domain_output, tgt_domain_label)
 
             # TODO: It should be a class recon classifier here
-
-            #domain_loss = loss_s_domain + loss_t_domain
-            #domain_loss.backward(retain_graph=True)
-            #diffused_loss.backward()
 
             loss = loss_s_domain + loss_t_domain + diffused_loss
             loss.backward()

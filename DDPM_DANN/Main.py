@@ -18,8 +18,8 @@ for f in files:
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-batch_size = 64
-epoches = 30
+batch_size = 128
+epoches = 10
 
 source_dl, target_dl, test_dl = load_data_set(batch_size = batch_size)
 criterion = nn.NLLLoss()
