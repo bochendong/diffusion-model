@@ -71,9 +71,8 @@ class FeatureEmbedding(nn.Module):
         self.fe = nn.Sequential(
             nn.Linear(1000, 2048),
             nn.ReLU(True),
-            nn.Linear(2048, 4096),
+            nn.Linear(2048, 3072),
             nn.ReLU(True),
-            nn.Linear(4096, 12288),
         )
 
         self.pretrained_model = resnet50(pretrained=True)
@@ -83,7 +82,7 @@ class FeatureEmbedding(nn.Module):
         with torch.no_grad():
             x = self.pretrained_model(x)
         x = self.fe(x)
-        x = x.view(-1, 3, 64, 64)
+        x = x.view(-1, 3, 32, 32)
         return x
     
 class ReverseLayerF(Function):
@@ -103,7 +102,7 @@ class DomainClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(256 * 16 * 16, 1024),
+            nn.Linear(256 * 8 * 8, 1024),
             nn.BatchNorm1d(1024),
             nn.ReLU(True),
             nn.Linear(1024, 256),
@@ -114,7 +113,7 @@ class DomainClassifier(nn.Module):
         )
 
     def forward(self, input):
-        input = input.view(-1, 256 * 16 * 16)
+        input = input.view(-1, 256 * 8 * 8)
         return self.net(input)
     
 def expand_to_planes(input, shape):
@@ -206,7 +205,7 @@ class Diffusion(nn.Module):
         middle_sample = self.down_3(down_sample)
         middle_sample = self.avg_3(self.up_0(middle_sample))
 
-        reverse_feature = ReverseLayerF.apply(middle_sample, 0.001)
+        reverse_feature = ReverseLayerF.apply(middle_sample, 0.005)
         domain_output = self.domain_classifier(reverse_feature)
 
         # Up Sample

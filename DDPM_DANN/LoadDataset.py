@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 
 def load_data_set(batch_size = 64):
     tf = transforms.Compose([
-        transforms.Resize(64),
         transforms.ToTensor(),
         transforms.Normalize([0.5], [0.5]),
     ])
