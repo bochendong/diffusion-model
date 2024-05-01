@@ -6,7 +6,7 @@ def load_data_set(batch_size = 64):
     tf = transforms.Compose([
         transforms.Resize(64),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms.Normalize([0.5], [0.5]),
     ])
 
     source_set = datasets.CIFAR10(root='data', train=True, download=True, transform=tf, target_transform=lambda x: x if x < 8 else -1)
