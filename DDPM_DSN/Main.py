@@ -70,7 +70,7 @@ def save_loss_history(loss_history, log_file):
 
 def generate_class(model, label, steps, eta, guidance_scale, device):
     noise = torch.randn([10, 3, 32, 32], device=device)
-    fakes_classes = torch.ones(10, device=device) * label
+    fakes_classes = torch.ones(10, device=device, dtype=torch.long) * label
     fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
     fakes = (fakes + 1) / 2
     fakes = torch.clamp(fakes, min=0, max = 1)
