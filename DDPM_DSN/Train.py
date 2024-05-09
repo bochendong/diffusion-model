@@ -77,7 +77,7 @@ def generate_diffussion_target(images, labels):
 
     return t, noised_reals, targets
 
-def train_diffussion(epoch, model, source_dl, optimizer, 
+def train_diffusion(epoch, model, source_dl, optimizer, 
                      steps, eta, ema_decay, guidance_scale, scheduler):
     
     for images, labels in source_dl:
@@ -158,4 +158,4 @@ def train_model(epoch, model, source_dl, target_dl,
     fakes = torch.clamp(fakes, min=0, max = 1)
     save_image(fakes.data, './output/%03d_train.png' % epoch)
 
-    return loss.item(), loss_s_domain.item(), loss_t_domain.item(), diff_loss_src.item(), diff_loss_tgt.item()
+    return diffused_loss.item(), loss_s_domain.item(), loss_t_domain.item(), diff_loss_src.item(), diff_loss_tgt.item()
