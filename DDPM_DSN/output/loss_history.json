@@ -1,0 +1,22 @@
+{
+    "Diffusion Loss History": [
+        0.3254287540912628,
+        0.30863112211227417
+    ],
+    "Domain Similarity Loss History (Src)": [
+        0.6759844422340393,
+        0.7259734272956848
+    ],
+    "Domain Similarity Loss History (Tgt)": [
+        0.6973918676376343,
+        0.6795474290847778
+    ],
+    "Domain Diff Loss History (Src)": [
+        6.760579708497971e-06,
+        4.784854354511481e-06
+    ],
+    "Domain Diff Loss History (Tgt)": [
+        5.624336154141929e-06,
+        4.056293164467206e-06
+    ]
+}
