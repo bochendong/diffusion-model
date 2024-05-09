@@ -77,8 +77,40 @@ def generate_diffussion_target(images, labels):
 
     return t, noised_reals, targets
 
+def train_diffussion(epoch, model, source_dl, optimizer, 
+                     steps, eta, ema_decay, guidance_scale, scheduler):
+    
+    for images, labels in source_dl:
+        src_images, src_labels = images.to(device), labels.to(device)
 
-def train_diffusion(epoch, model, source_dl, target_dl, 
+        t, noised_src, src_recon_targets = generate_diffussion_target(src_images, src_labels)
+
+        optimizer.zero_grad()
+
+        to_drop = torch.rand(src_labels.shape, device=src_labels.device).le(0.2)
+        classes_drop = torch.where(to_drop, -torch.ones_like(src_labels), src_labels)
+
+        output, _, _, _ = model(noised_src, t, classes_drop, type = "Source")
+        loss = F.mse_loss(output, src_recon_targets)
+
+        loss.backward()
+        optimizer.step()
+
+    scheduler(optimizer, epoch)
+
+    print(f"Epoch {epoch+1}:")
+    print('Diffusion_loss', loss.item())
+    noise = torch.randn([10, 3, 32, 32], device=device)
+    fakes_classes = torch.arange(10, device=device)
+    fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
+    fakes = (fakes + 1) / 2
+    fakes = torch.clamp(fakes, min=0, max = 1)
+    save_image(fakes.data, './output/%03d_train.png' % epoch)
+
+    return loss.item()
+
+
+def train_model(epoch, model, source_dl, target_dl, 
                      optimizer, criterion, diff_loss, 
                      src_domain_label, tgt_domain_label,
                      alpha, gamma,
