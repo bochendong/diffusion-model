@@ -108,7 +108,7 @@ def main():
             )
             loss_history[0].append(epoch_loss)
         else:
-            epoch_loss = train_diffusion(
+            epoch_loss = train_model(
                 epoch, model, source_dl, target_dl, 
                 optimizer, criterion, diff_loss, 
                 src_domain_label, tgt_domain_label, 
