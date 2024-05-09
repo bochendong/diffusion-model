@@ -98,7 +98,6 @@ def train_diffusion(epoch, model, source_dl, optimizer,
 
     scheduler(optimizer, epoch)
 
-    print(f"Epoch {epoch+1}:")
     print('Diffusion_loss', loss.item())
     noise = torch.randn([10, 3, 32, 32], device=device)
     fakes_classes = torch.arange(10, device=device)
@@ -147,7 +146,6 @@ def train_model(epoch, model, source_dl, target_dl,
 
     scheduler(optimizer, epoch)
 
-    print(f"Epoch {epoch+1}:")
     print('Diffusion_loss', diffused_loss.item())
     print("Domain Similarity Loss", 'src: ', loss_s_domain.item(), 'tgt: ', loss_t_domain.item())
     print('Domain Diff Loss', 'src: ', diff_loss_src.item(), 'tgt: ', diff_loss_tgt.item())

@@ -101,6 +101,7 @@ def main():
     loss_history = [[], [], [], [], []]
 
     for epoch in range(EPOCHS):
+        print(f"Epoch {epoch+1}:")
         if (epoch < TRANSFER_START_EPOCH):
             epoch_loss = train_diffusion(epoch, model, source_dl, optimizer, 
                      steps=STEPS, eta=ETA, ema_decay=EMA_DECAY, 
