@@ -1,38 +1,67 @@
 import torch
+import math
 from torch import optim, nn
 from torch.nn import functional as F
 from torchvision.utils import save_image
 
-from Models import get_alphas_sigmas, sample
 
 rng = torch.quasirandom.SobolEngine(1, scramble=True)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-steps = 500
-eta = 1.
-ema_decay = 0.999
-guidance_scale = 2.
 
-class DiffLoss(nn.Module):
+def get_alphas_sigmas(t):
+    """
+    Returns the scaling factors for the clean image (alpha) and for the
+    noise (sigma), given a timestep.
+    """
+    return torch.cos(t * math.pi / 2), torch.sin(t * math.pi / 2)
 
-    def __init__(self):
-        super(DiffLoss, self).__init__()
+@torch.no_grad()
+def sample(model, x, steps, eta, classes, guidance_scale=1.):
+    """
+    Draws samples from a model given starting noise.
+    """
+    ts = x.new_ones([x.shape[0]])
 
-    def forward(self, input1, input2):
-        batch_size = input1.size(0)
-        input1 = input1.view(batch_size, -1)
-        input2 = input2.view(batch_size, -1)
+    # Create the noise schedule
+    t = torch.linspace(1, 0, steps + 1)[:-1]
+    alphas, sigmas = get_alphas_sigmas(t)
 
-        input1_l2_norm = torch.norm(input1, p=2, dim=1, keepdim=True).detach()
-        input1_l2 = input1.div(input1_l2_norm.expand_as(input1) + 1e-6)
+    # The sampling loop
+    for i in range(steps):
 
-        input2_l2_norm = torch.norm(input2, p=2, dim=1, keepdim=True).detach()
-        input2_l2 = input2.div(input2_l2_norm.expand_as(input2) + 1e-6)
+        # Get the model output (v, the predicted velocity)
+        with torch.cuda.amp.autocast():
+            x_in = torch.cat([x, x])
+            ts_in = torch.cat([ts, ts])
+            classes_in = torch.cat([-torch.ones_like(classes), classes])
+            v_uncond, v_cond = model(x_in, ts_in * t[i], classes_in)[0].float().chunk(2)
+        v = v_uncond + guidance_scale * (v_cond - v_uncond)
 
-        diff_loss = torch.mean((input1_l2.t().mm(input2_l2)).pow(2))
+        # Predict the noise and the denoised image
+        pred = x * alphas[i] - v * sigmas[i]
+        eps = x * sigmas[i] + v * alphas[i]
 
-        return diff_loss
-    
+        # If we are not on the last timestep, compute the noisy image for the
+        # next timestep.
+        if i < steps - 1:
+            # If eta > 0, adjust the scaling factor for the predicted noise
+            # downward according to the amount of additional noise to add
+            ddim_sigma = eta * (sigmas[i + 1]**2 / sigmas[i]**2).sqrt() * \
+                (1 - alphas[i]**2 / alphas[i + 1]**2).sqrt()
+            adjusted_sigma = (sigmas[i + 1]**2 - ddim_sigma**2).sqrt()
+
+            # Recombine the predicted noise and predicted denoised image in the
+            # correct proportions for the next step
+            x = pred * alphas[i + 1] + eps * adjusted_sigma
+
+            # Add the correct amount of fresh noise
+            if eta:
+                x += torch.randn_like(x) * ddim_sigma
+
+    # If we are on the last timestep, output the denoised image
+    return pred
+
 def generate_diffussion_target(images, labels):
     t = rng.draw(labels.shape[0])[:, 0].to(device)
 
@@ -48,10 +77,12 @@ def generate_diffussion_target(images, labels):
 
     return t, noised_reals, targets
 
+
 def train_diffusion(epoch, model, source_dl, target_dl, 
-                     alpha, gamma,
                      optimizer, criterion, diff_loss, 
-                     src_domain_label, tgt_domain_label):
+                     src_domain_label, tgt_domain_label,
+                     alpha, gamma,
+                     steps, eta, ema_decay, guidance_scale, scheduler):
     
     source_iter = iter(source_dl)
     model.train()
@@ -82,8 +113,10 @@ def train_diffusion(epoch, model, source_dl, target_dl,
         loss.backward()
         optimizer.step()
 
+    scheduler(optimizer, epoch)
+
     print(f"Epoch {epoch+1}:")
-    print('Diffusion_loss', loss.item())
+    print('Diffusion_loss', diffused_loss.item())
     print("Domain Similarity Loss", 'src: ', loss_s_domain.item(), 'tgt: ', loss_t_domain.item())
     print('Domain Diff Loss', 'src: ', diff_loss_src.item(), 'tgt: ', diff_loss_tgt.item())
     noise = torch.randn([10, 3, 32, 32], device=device)
@@ -92,3 +125,5 @@ def train_diffusion(epoch, model, source_dl, target_dl,
     fakes = (fakes + 1) / 2
     fakes = torch.clamp(fakes, min=0, max = 1)
     save_image(fakes.data, './output/%03d_train.png' % epoch)
+
+    return loss.item(), loss_s_domain.item(), loss_t_domain.item(), diff_loss_src.item(), diff_loss_tgt.item()
