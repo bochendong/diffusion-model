@@ -1,18 +1,21 @@
 import os
 import glob
+import json
 import torch
 from torch import optim, nn
 import matplotlib.pyplot as plt
+from torchvision.utils import save_image
 
 from LoadDataset import load_data_set
-from Train import train_diffusion
+from Train import train_diffusion, sample
 from Models import Diffusion
 from Loss import DiffLoss
 
 # Constants
 OUTPUT_DIR = "./output"
+LOG_FILE = os.path.join(OUTPUT_DIR, "loss_history.json")
 BATCH_SIZE = 100
-EPOCHS = 10
+EPOCHS = 2
 STEPS = 500
 ETA = 1.0
 ALPHA = 0.1
@@ -24,6 +27,12 @@ LEARNING_RATE = 4e-4
 # Device configuration
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+def adjust_learning_rate(optimizer, epoch, initial_lr, decay_interval=30, decay_factor=0.5):
+    """Adjusts the learning rate according to the given decay schedule."""
+    lr = initial_lr * (decay_factor ** (epoch // decay_interval))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
 def setup_output_directory(output_dir):
     """Ensure output directory exists and is clean."""
     if not os.path.exists(output_dir):
@@ -31,12 +40,6 @@ def setup_output_directory(output_dir):
     files = glob.glob(os.path.join(output_dir, "*.png"))
     for f in files:
         os.remove(f)
-
-def adjust_learning_rate(optimizer, epoch, initial_lr, decay_interval=30, decay_factor=0.5):
-    """Adjusts the learning rate according to the given decay schedule."""
-    lr = initial_lr * (decay_factor ** (epoch // decay_interval))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
 
 def plot_loss_history(loss_history, epochs, output_dir):
     loss_names = [
@@ -52,6 +55,26 @@ def plot_loss_history(loss_history, epochs, output_dir):
         plt.title(loss_names[i])
         plt.savefig(os.path.join(output_dir, f"{loss_names[i]}.png"))
         plt.close()
+
+def save_loss_history(loss_history, log_file):
+    """Saves the loss history to a JSON file."""
+    loss_data = {
+        "Diffusion Loss History": loss_history[0],
+        "Domain Similarity Loss History (Src)": loss_history[1],
+        "Domain Similarity Loss History (Tgt)": loss_history[2],
+        "Domain Diff Loss History (Src)": loss_history[3],
+        "Domain Diff Loss History (Tgt)": loss_history[4]
+    }
+    with open(log_file, 'w') as file:
+        json.dump(loss_data, file, indent=4)
+
+def generate_class(model, label, steps, eta, guidance_scale, device):
+    noise = torch.randn([10, 3, 32, 32], device=device)
+    fakes_classes = torch.ones(10) * label
+    fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
+    fakes = (fakes + 1) / 2
+    fakes = torch.clamp(fakes, min=0, max = 1)
+    save_image(fakes.data, './output/%03d_output.png'%label)
 
 def main():
     setup_output_directory(OUTPUT_DIR)
@@ -85,6 +108,12 @@ def main():
             loss_history[i].append(epoch_loss[i])
     
     plot_loss_history(loss_history, EPOCHS, OUTPUT_DIR)
+    save_loss_history(loss_history, LOG_FILE)
+
+    for label in range(0, 9):
+        generate_class(model, label, steps = STEPS, eta = ETA, 
+                       guidance_scale = GUIDANCE_SCALE, 
+                       device = DEVICE)
 
 if __name__ == "__main__":
     main()
