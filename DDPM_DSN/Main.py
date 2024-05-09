@@ -122,7 +122,7 @@ def main():
 
         if ((epoch + 1) % 25 == 0):
             for label in range(0, 10):
-                generate_class(model, epoch,label, steps = STEPS, eta = ETA, 
+                generate_class(model, epoch, label, steps = STEPS, eta = ETA, 
                     guidance_scale = GUIDANCE_SCALE, 
                     evice = DEVICE)
     
