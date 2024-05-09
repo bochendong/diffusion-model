@@ -14,8 +14,8 @@ from Loss import DiffLoss
 # Constants
 OUTPUT_DIR = "./output"
 LOG_FILE = os.path.join(OUTPUT_DIR, "loss_history.json")
-BATCH_SIZE = 100
-EPOCHS = 2
+BATCH_SIZE = 150
+EPOCHS = 100
 STEPS = 500
 ETA = 1.0
 ALPHA = 0.1
