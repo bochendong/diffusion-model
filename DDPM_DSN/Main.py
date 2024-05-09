@@ -68,13 +68,13 @@ def save_loss_history(loss_history, log_file):
     with open(log_file, 'w') as file:
         json.dump(loss_data, file, indent=4)
 
-def generate_class(model, label, steps, eta, guidance_scale, device):
+def generate_class(model, epoch, label, steps, eta, guidance_scale, device):
     noise = torch.randn([10, 3, 32, 32], device=device)
     fakes_classes = torch.ones(10, device=device, dtype=torch.long) * label
     fakes = sample(model, noise, steps, eta, fakes_classes, guidance_scale)
     fakes = (fakes + 1) / 2
     fakes = torch.clamp(fakes, min=0, max = 1)
-    save_image(fakes.data, './output/%03d_output.png'%label)
+    save_image(fakes.data, './output/%03d_%03d_output.png'%(label, epoch))
 
 def main():
     setup_output_directory(OUTPUT_DIR)
@@ -106,14 +106,15 @@ def main():
         
         for i in range(len(loss_history)):
             loss_history[i].append(epoch_loss[i])
+
+        if ((epoch + 1) % 30 == 0):
+            for label in range(0, 9):
+                generate_class(model, epoch,label, steps = STEPS, eta = ETA, 
+                            guidance_scale = GUIDANCE_SCALE, 
+                            device = DEVICE)
     
     plot_loss_history(loss_history, EPOCHS, OUTPUT_DIR)
     save_loss_history(loss_history, LOG_FILE)
-
-    for label in range(0, 9):
-        generate_class(model, label, steps = STEPS, eta = ETA, 
-                       guidance_scale = GUIDANCE_SCALE, 
-                       device = DEVICE)
 
 if __name__ == "__main__":
     main()
