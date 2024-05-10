@@ -125,7 +125,7 @@ def main():
             for label in range(0, 10):
                 generate_class(model, epoch, label, steps = STEPS, eta = ETA, 
                     guidance_scale = GUIDANCE_SCALE, 
-                    evice = DEVICE)
+                    device = DEVICE)
     
     plot_loss_history(loss_history, OUTPUT_DIR)
     save_loss_history(loss_history, LOG_FILE)
