@@ -4,10 +4,8 @@ from torch import optim, nn
 from torch.nn import functional as F
 from torchvision.utils import save_image
 
-
 rng = torch.quasirandom.SobolEngine(1, scramble=True)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 def get_alphas_sigmas(t):
     """

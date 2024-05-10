@@ -18,9 +18,11 @@ class ResConvBlock(ResidualBlock):
         skip = None if c_in == c_out else nn.Conv2d(c_in, c_out, 1, bias=False)
         super().__init__([
             nn.Conv2d(c_in, c_mid, 3, padding=1),
+            nn.BatchNorm2d(c_mid),
             nn.Dropout2d(0.1, inplace=True),
             nn.ReLU(inplace=True),
             nn.Conv2d(c_mid, c_out, 3, padding=1),
+            nn.BatchNorm2d(c_out),
             nn.Dropout2d(0.1, inplace=True) if not is_last else nn.Identity(),
             nn.ReLU(inplace=True) if not is_last else nn.Identity(),
         ], skip)
@@ -197,8 +199,6 @@ class UpSample(nn.Module):
         )
 
     def forward(self, middle_sample, identity_0, identity_1, identity_2):
-        
-
         up_sample = torch.cat([middle_sample, self.conv_2(identity_2)], dim=1)
         up_sample = self.up_1(up_sample)
 
