@@ -14,16 +14,18 @@ from Loss import DiffLoss
 # Constants
 OUTPUT_DIR = "./output"
 LOG_FILE = os.path.join(OUTPUT_DIR, "loss_history.json")
+
 BATCH_SIZE = 150
-EPOCHS = 150
+EPOCHS = 2
+TRANSFER_START_EPOCH = 50
+
 STEPS = 500
 ETA = 1.0
 ALPHA = 0.1
-GAMMA = 1.0
+GAMMA = 10.0
 EMA_DECAY = 0.999
 GUIDANCE_SCALE = 2.0
 LEARNING_RATE = 8e-4
-TRANSFER_START_EPOCH = 50
 CIFAR_10_CLASSES = [
     "airplane", "automobile", "bird", "cat", "deer", 
     "dog", "frog", "horse", "ship", "truck"
