@@ -56,7 +56,7 @@ def plot_loss_history(loss_history, output_dir):
     ]
     for i, loss in enumerate(loss_history):
         plt.figure()
-        plt.plot(range(len(loss[i])), loss)
+        plt.plot(range(len(loss)), loss)
         plt.title(loss_names[i])
         plt.savefig(os.path.join(output_dir, f"{loss_names[i]}.png"))
         plt.close()
