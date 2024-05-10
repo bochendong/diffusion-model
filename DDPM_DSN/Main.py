@@ -16,7 +16,7 @@ OUTPUT_DIR = "./output"
 LOG_FILE = os.path.join(OUTPUT_DIR, "loss_history.json")
 
 BATCH_SIZE = 150
-EPOCHS = 2
+EPOCHS = 150
 TRANSFER_START_EPOCH = 50
 
 STEPS = 500
